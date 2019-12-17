@@ -16,7 +16,7 @@ print ("Press the space key to capture")
 img_counter=0
 #ID = raw_input("Enter the student ID")
 #savePath=args["workdir"]
-savePath= "C:\Users\Hari kumar\Desktop\PHASE01"
+savePath= "C:\Users\Hari kumar\Desktop\PHASE01" #Add the path of the working directory that you want here
 os.mkdir(os.path.join(savePath,args["ID"]))
 while True:
        
