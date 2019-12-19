@@ -1,12 +1,10 @@
 import cv2
 import os
-#import os.path
 import argparse
 from imutils import paths
 import face_recognition
 import pickle
-
-#CODE TO CLICK PICTURES AND SAVE THEM IN SEPARATE FOLDERS ACCORDING TO THE ID NUMBER
+from sklearn import svm
 
 knownEncodings = []
 knownNames = []
@@ -21,12 +19,10 @@ ap.add_argument("-e","--encodings",required=True,help="path to serialised db of 
 args=vars(ap.parse_args())
 
 print ("Press the space key to capture")
-
-
 img_counter=0
 #ID = raw_input("Enter the student ID")
 #savePath=args["workdir"]
-savePath= "C:\Users\Hari kumar\Desktop\PHASE01"
+savePath="C:\\Users\\Niyati\\Desktop\\FaceRecog\\dataset"
 os.mkdir(os.path.join(savePath,args["ID"]))
 while True:
        
@@ -40,10 +36,10 @@ while True:
                      fileName = os.path.join(savePath,args["ID"],"IMAGE "+str(img_counter)+".png")
                      cv2.imwrite(fileName,frame)
                      img_counter+=1
-                     print "Image captured"
+                     print("Image captured")
        else:
 
-              print "5 images Captured"
+              print("5 images Captured")
               break
 
 
@@ -53,14 +49,9 @@ knownEncodings=[]
 knownNames=[]
 #CODE TO CREATE THE ENCODINGS
 
-
 #taking the user input
 print("[INFO] quantifying faces...")
 imagePaths = list(paths.list_images(args["ID"]))#creating a list of image paths
-
-
-
-#Now we will loop over handsome Leo's pictures
 
 for (i,imagePath) in enumerate(imagePaths):
     print("[INFO] processing image {}/{}".format(i+1,len(imagePaths)))
@@ -89,3 +80,24 @@ data={"encodings":knownEncodings,"names":knownNames}
 f=open(os.path.join(savePath,args["ID"],"encodings.pickle"),"wb")
 f.write(pickle.dumps(data))
 f.close
+
+clf = svm.SVC(gamma='scale')
+clf.fit(encodings,names)
+k= cv2.waitKey(1)
+ret,frame = cam.read()
+cv2.imshow("Capture",frame)
+cv2.imwrite("test_image.jpg",frame)
+# Load the test image with unknown faces into a numpy array
+test_image = face_recognition.load_image_file('test_image.jpg')
+
+# Find all the faces in the test image using the default HOG-based model
+face_locations = face_recognition.face_locations(test_image)
+no = len(face_locations)
+print("Number of faces detected: ", no)
+
+# Predict all the faces in the test image using the trained classifier
+print("Found:")
+for i in range(no):
+    test_image_enc = face_recognition.face_encodings(test_image)[i]
+    name = clf.predict([test_image_enc])
+    print(*name)
