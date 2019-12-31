@@ -1,45 +1,77 @@
 import cv2
 import os
+#import os.path
 import argparse
+import imutils
 from imutils import paths
 import face_recognition
 import pickle
-from sklearn import svm
+import numpy
+import face_recognition
+
+#CODE TO CLICK PICTURES AND SAVE THEM IN SEPARATE FOLDERS ACCORDING TO THE ID NUMBER
 
 knownEncodings = []
 knownNames = []
-cam = cv2.VideoCapture(0)
-cv2.namedWindow("Capture")
+cap = cv2.VideoCapture(0)
+
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
+
+
+#cv2.namedWindow("Capture")
 
 ap = argparse.ArgumentParser()
 #ap.add_argument("-w","--workdir",required=True,help="The path to your working directory")
 ap.add_argument("-i","--ID",required=True,help="The identification number of student")
-ap.add_argument("-e","--encodings",required=True,help="path to serialised db of facial encodings")
+#ap.add_argument("-e","--encodings",required=True,help="path to serialised db of facial encodings")
 
 args=vars(ap.parse_args())
 
 print ("Press the space key to capture")
+
+
 img_counter=0
 #ID = raw_input("Enter the student ID")
-#savePath=args["workdir"]
-savePath="C:\\Users\\Niyati\\Desktop\\FaceRecog\\dataset"
+#savePath=args["workdir"]-
+savePath= "C:\Users\Hari kumar\Desktop\PHASE01"
 os.mkdir(os.path.join(savePath,args["ID"]))
 while True:
-       
+       ret, frame = cap.read()
+       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+       faces=face_cascade.detectMultiScale(gray, 1.3, 5)
+       for (x,y,w,h) in faces:
+               cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
+               font = cv2.FONT_HERSHEY_SIMPLEX
+               cv2.putText(frame,"click now",(x,y), font, 1, (200,255,155), 2, cv2.LINE_AA)
+       cv2.imshow('Click',frame)
+       rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+       rgb = imutils.resize(frame, width=750)
+       r = frame.shape[1] / float(rgb.shape[1])
+       boxes = face_recognition.face_locations(rgb,model="hog")
+       for (top, right, bottom, left) in boxes:
+                # rescale the face coordinates
+                top = int(top * r)
+                right = int(right * r)
+                bottom = int(bottom * r)
+                left = int(left * r)
+                # draw the predicted face name on the image
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
        if img_counter<5:
-              
               k= cv2.waitKey(1)
-              ret,frame = cam.read()
-              cv2.imshow("Capture",frame)
+              
+              #cv2.imshow("Capture",frame)
+              clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+              grey=cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+              cl1 = clahe.apply(grey)
+              cv2.imshow("CLAHE",cl1)
               if k%256 == 32:
-                     
                      fileName = os.path.join(savePath,args["ID"],"IMAGE "+str(img_counter)+".png")
-                     cv2.imwrite(fileName,frame)
+                     cv2.imwrite(fileName,cl1)
                      img_counter+=1
-                     print("Image captured")
+                     print "Image captured"
        else:
 
-              print("5 images Captured")
+              print "5 images Captured"
               break
 
 
@@ -49,9 +81,14 @@ knownEncodings=[]
 knownNames=[]
 #CODE TO CREATE THE ENCODINGS
 
+
 #taking the user input
 print("[INFO] quantifying faces...")
 imagePaths = list(paths.list_images(args["ID"]))#creating a list of image paths
+
+
+
+#Now we will loop over the pictures
 
 for (i,imagePath) in enumerate(imagePaths):
     print("[INFO] processing image {}/{}".format(i+1,len(imagePaths)))
@@ -72,7 +109,8 @@ for (i,imagePath) in enumerate(imagePaths):
             # encodings
             knownEncodings.append(encoding)
             knownNames.append(name)
-
+print knownEncodings
+print knownNames
 #creating a file with our encodings!
 print("[INFO] serializing encodings...")
 data={"encodings":knownEncodings,"names":knownNames}
@@ -80,24 +118,3 @@ data={"encodings":knownEncodings,"names":knownNames}
 f=open(os.path.join(savePath,args["ID"],"encodings.pickle"),"wb")
 f.write(pickle.dumps(data))
 f.close
-
-clf = svm.SVC(gamma='scale')
-clf.fit(encodings,names)
-k= cv2.waitKey(1)
-ret,frame = cam.read()
-cv2.imshow("Capture",frame)
-cv2.imwrite("test_image.jpg",frame)
-# Load the test image with unknown faces into a numpy array
-test_image = face_recognition.load_image_file('test_image.jpg')
-
-# Find all the faces in the test image using the default HOG-based model
-face_locations = face_recognition.face_locations(test_image)
-no = len(face_locations)
-print("Number of faces detected: ", no)
-
-# Predict all the faces in the test image using the trained classifier
-print("Found:")
-for i in range(no):
-    test_image_enc = face_recognition.face_encodings(test_image)[i]
-    name = clf.predict([test_image_enc])
-    print(*name)
