@@ -29,12 +29,12 @@ args=vars(ap.parse_args())
 
 print ("Press the space key to capture")
 
-
 img_counter=0
 #ID = raw_input("Enter the student ID")
 #savePath=args["workdir"]-
-savePath= "C:\Users\Hari kumar\Desktop\PHASE01"
-os.mkdir(os.path.join(savePath,args["ID"]))
+savePath= "DATA"
+if not os.path.exists(os.path.join(savePath,args["ID"])):
+       os.mkdir(os.path.join(savePath,args["ID"]))
 while True:
        ret, frame = cap.read()
        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -68,13 +68,11 @@ while True:
                      fileName = os.path.join(savePath,args["ID"],"IMAGE "+str(img_counter)+".png")
                      cv2.imwrite(fileName,cl1)
                      img_counter+=1
-                     print "Image captured"
+                     print("Image captured")
        else:
 
-              print "5 images Captured"
+              print("5 images Captured")
               break
-
-
 
 
 knownEncodings=[]
@@ -109,8 +107,8 @@ for (i,imagePath) in enumerate(imagePaths):
             # encodings
             knownEncodings.append(encoding)
             knownNames.append(name)
-print knownEncodings
-print knownNames
+# print(knownEncodings)
+print(knownNames)
 #creating a file with our encodings!
 print("[INFO] serializing encodings...")
 data={"encodings":knownEncodings,"names":knownNames}
