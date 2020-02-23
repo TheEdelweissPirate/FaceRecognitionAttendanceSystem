@@ -7,7 +7,7 @@ from imutils import paths
 import face_recognition
 import pickle
 import numpy
-import face_recognition
+
 
 #CODE TO CLICK PICTURES AND SAVE THEM IN SEPARATE FOLDERS ACCORDING TO THE ID NUMBER
 
